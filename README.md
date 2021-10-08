@@ -44,9 +44,11 @@ After it you'll be able to see all the options that can be passed to the app :
 lsc putnam.ls [-option] [file] expression 
 
 --run     [single file] :: Check the current file  
+--run-m   [single file] :: Check the expression inside the file  
 --folder  [folder path] :: Will search for errors in all folder's files
 --watch   [single file] :: Watches a single file and searching for errors
 --watch-d [single file] :: Watches a single file and searching for errors and changes
+--watch-d-m [single file] :: Watches a single file for diff and use the inside written expression
 ```
 
 ## Real Example
@@ -91,7 +93,7 @@ The app just searched all signatures and found the ones which do not match !
 
 #### Example 2 : running watching mode for a single file
 
-Consider the following file **fil2.hs**:
+Consider the following file **file2.hs**:
 
 ```haskell
 foo :: a -> b -> b
@@ -132,10 +134,56 @@ Waiting changes... ◒
 Waiting changes... ◓
 ```
 
+#### Example 3 : use expression inside the file and watch it for diff
+
+Consider the following file **file3.hs**:
+
+```haskell
+--Expr forall T. a -> b -> b
+
+foo :: a -> b -> b
+foo x y = y 
+```
+
+As in the examples above let's change it :
+
+```diff
+Expr forall T. a -> b -> b
+
+foo :: a -> b -> b
+foo x y = y 
+
++bar :: q -> p -> p
++bar x y = y 
+```
+
+We can use the expression inside the target file using :
+
+```console
+lsc --run-m file3.hs 
+lsc --watch-d-m file3.hs 
+```
+
+Which will result :
+
+```
+Starting analysis
+Using file: file2.hs at [ 10|1|2021 ]
+
+[ Success : no issues found ]
+Waiting changes... ◒
+
+bar :: q -> p -> p
+ ^^^^ Not permitted
+
+Waiting changes... ◓
+```
+
+
 As we can see at first there was no issues , and then, while the app was watching the file, an issue appeared on the diff and was shown to the user. 
 
 # 🏗️ Under development...
 - [X] Haskell like expressions 
 - [ ] New possible kinds of expressions
-- [ ] Haskell library integration 
+- [X] Haskell library integration 
 - [ ] UI diff tracker ( may we use a git's gui ? ) 
