@@ -41,6 +41,15 @@ parser = (chunk) ->
 		|> Str.split "forall T. "
 		|> last  
 		|> left-add ":: "
+
+extractLine = (file) ->
+	file
+		|> IO.read 
+		|> Str.split \\n
+		|> filter (is /(--Expr|--Export) :: (forall T.) [a-zA-Z0-9]{1,} -> [a-zA-Z0-9]{1,}(( -> [a-zA-Z0-9]{1,})?){0,}/)
+		|> first
+		|> Str.split "--Expr :: " 
+		|> last 
 		
 findTypes = Func.curry (eq,text) -> 
 		
@@ -68,7 +77,7 @@ findTypes = Func.curry (eq,text) ->
 		x 
 		|> last 
 		|> left-add \:  
-		|> left-add (get_line x)
+		|> left-add (get_line x) 
 		|> -> 
 			| n => it 
 			| _ => it.red
@@ -87,16 +96,16 @@ findTypes = Func.curry (eq,text) ->
 							it
 						|> first
 						|> map (->
-								| first it => log it
+								| first it => log it 
 								| _ 	   => log it, 1 )
 						|> -> [\\n] ++ it 
-						|> -> it ++ [" ^^^^ Not permitted\n"]
+						|> -> it ++ [" ^^^^ Not permitted\n".red]
 				catch
 					pure_text
 
 
 run_single_file = Func.curry (line,file) ->
-		IO.puts \Running file
+		IO.puts "Running #{file} \n"
 		file
 			|> IO.read
 			|> Str.split \\n
@@ -105,8 +114,35 @@ run_single_file = Func.curry (line,file) ->
 				| typeof! it is \Array => it |> IO.line
 				| _ 				   => it |> IO.puts
 
+watch-diff = Func.curry (x,y="",v=0,line) -> 
+		| v is 0 =>
+			x
+			|> IO.read
+			|> -> watch-diff x, it, 1, line
+		| v isnt 0 =>
+			sleep 2
+			run-loading!
+			x
+			|> IO.read
+			|> diff.diffChars y, _
+			|> filter (.added)
+			|> map (.value) 
+			|> Str.join "\n"
+			|> -> 
+				| it is ""   => 
+					watch-diff x, y, 1, line
+				| it isnt "" =>
+					it
+					|> Str.split \\n
+					|> -> 
+						findTypes line, it 
+					|> -> 
+						| typeof! it is \Array => it |> IO.line
+						| _ 				   => it |> IO.puts
+					watch-diff x, "", 0,line	
+				
 main = do
-	
+
 	ts 		= Date.now();
 	ob 		= new Date(ts);	
 	date 	= ob.getDate();
@@ -116,25 +152,25 @@ main = do
 	unless process.argv[3] is \--help
 		IO.puts "Using file: #{process.argv[4]} at [ #{month}|#{date}|#{year} ]"
 		IO.puts "Starting analysis".green
-	
+		
 	process.argv
 		|> filter (-> (check.p0 and check.p1) it)
 		|> tail
 		|> -> 
-			| it.length < 3 && it.0 isnt \--help => IO.lineFail!
+			| it.length < 3 && it in ["--watch-d-m","--help","--run-m"] => IO.lineFail!
 			| _ 		    => it
 		|> (_) -> 
-			| _.0 is \--help  =>
+			| _.0 is \--help   =>
 				IO.puts """
-				
 lsc putnam.ls [-option] [file] expression 
 
 --run     [single file] :: Check the current file  
+--run-m   [single file] :: Check the expression inside the file  
 --folder  [folder path] :: Will search for errors in all folder's files
 --watch   [single file] :: Watches a single file and searching for errors
 --watch-d [single file] :: Watches a single file and searching for errors and changes
-
 				"""
+				
 			| _.0 is \--run    => 
 				_.1
 					|> run_single_file _.2
@@ -145,6 +181,7 @@ lsc putnam.ls [-option] [file] expression
 					|> map (run_single_file _.2)
 			| _.0 is \--watch  => 
 				do watch = (x=_.1,y="",v=0.0) -> 
+					sleep 1
 					x
 					|> IO.read
 					|> -> 
@@ -158,42 +195,16 @@ lsc putnam.ls [-option] [file] expression
 							IO.puts \\n
 							[it,v+0.1]
 					|> -> watch x, it.0, it.1 
-					sleep 1
-					
+			
 			| _.0 is \--watch-d =>
-				do watch-diff = (x=_.1,y="",v=0.0) -> 
-					| y is "" and v is 0.0   => 
-						x
-						|> IO.read 
-						|> diff.diffChars y, _
-						|> filter (.added) 
-						|> map (.value)  
-						|> ->
-							| !(it.length) => ""
-							| _    		   => Str.join "\n" it 
-						|> watch-diff x, _, v+0.1
-						sleep 1																	 																				
-						 
-					| y is "" and v > 0.0 	 =>
-						do wait-update = (nw=y,c=0) ->
-							sleep 1 
-							run-loading!
-							x 
-							|> IO.read 
-							|> ->
-								| (it isnt nw) && (c == 0) => wait-update it, c+0.1
-								| (it is   nw) && (c >= 0) => wait-update it, c+0.1
-								| (it isnt nw) && (c >= 0) => watch-diff x, it, v+0.1
-																		
-					| y isnt "" and v > 0.0  =>
-						y
-						|> Str.split \\n
-						|> findTypes _.2
-						|> -> 
-							| typeof! it is \Array => it |> IO.line
-							| _ 				   => it |> IO.puts
-						sleep 1
-						watch-diff x, "", v+0.1							 
+				watch-diff _.1 , "" , 0 , _.2 			
+			| _.0 is "--watch-d-m" =>
+				l = _.1 |> extractLine 
+				watch-diff _.1 , "" , 0, l
+			| _.0 is "--run-m" =>
+				_.1
+					|> extractLine 
+					|> run_single_file _, _.1 	 
 					
 			| _ 			   =>
 				IO.cmdFail!
