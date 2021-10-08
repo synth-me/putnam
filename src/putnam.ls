@@ -169,6 +169,7 @@ lsc putnam.ls [-option] [file] expression
 --folder  [folder path] :: Will search for errors in all folder's files
 --watch   [single file] :: Watches a single file and searching for errors
 --watch-d [single file] :: Watches a single file and searching for errors and changes
+--watch-d-m [single file] :: Watches a single file for diff and use the inside written expression
 				"""
 				
 			| _.0 is \--run    => 
