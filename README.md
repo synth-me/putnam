@@ -205,3 +205,10 @@ As we can see at first there was no issues , and then, while the app was watchin
 - [X] Dsl to manipulate the putnam api 
 - [X] Haskell library integration 
 - [ ] UI diff tracker ( may we use a git's gui ? ) 
+
+##### Name :: 
+The name of this system was given after the great jewish philosopher and mathematician Hilary Putnam 
+
+*“All of this is really impossible, in the way that it is really impossible that monkeys should by chance type out a copy of Hamlet.”
+― Hilary Putnam*
+
