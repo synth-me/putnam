@@ -1,3 +1,18 @@
+# New features 🎉 
+
+### Happer⚒️ dsl 
+With the need to script over the putnam's api i created a simple ruby dsl that can automatize certain tasks and even simplify others to help the workflow of putnam
+to use the dsl check the documentation at [Happer](https://github.com/synth-me/putnam/blob/main/Happer/readme.md) folder here in the same repo
+
+### Putnam new mode 🆕
+we added a new mode of putnam's cli where one can evaluate single expressions using **--run-l** like the following 
+
+```powershell
+lsc putnam.ls --run-l "foo :: a -> b" "forall T. a -> b"
+
+``` 
+
+
 # Putnam
 
 ## Syntatic code checker for Haskell
@@ -17,6 +32,7 @@ With facebook new's features to Haskell hot-swap code become easier. Although th
 ##### Dependencies :: 
 ```powershell  
 Livescript
+Ruby 
 Node
 npm 
 ```
@@ -44,6 +60,7 @@ After it you'll be able to see all the options that can be passed to the app :
 lsc putnam.ls [-option] [file] expression 
 
 --run     [single file] :: Check the current file  
+--run-l   [code chunk ] :: Check the current line of code 
 --run-m   [single file] :: Check the expression inside the file  
 --folder  [folder path] :: Will search for errors in all folder's files
 --watch   [single file] :: Watches a single file and searching for errors
@@ -185,5 +202,6 @@ As we can see at first there was no issues , and then, while the app was watchin
 # 🏗️ Under development...
 - [X] Haskell like expressions 
 - [ ] New possible kinds of expressions
+- [X] Dsl to manipulate the putnam api 
 - [X] Haskell library integration 
 - [ ] UI diff tracker ( may we use a git's gui ? ) 
