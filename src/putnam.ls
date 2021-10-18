@@ -29,7 +29,7 @@ check =
 		
 left-add = Func.curry (+)
 		
-parser = (chunk) -> 
+parser = (chunk) ->
 	chunk 
 		|> ->
 			| it is undefined => IO.absent!
@@ -114,6 +114,14 @@ run_single_file = Func.curry (line,file) ->
 				| typeof! it is \Array => it |> IO.line
 				| _ 				   => it |> IO.puts
 
+run_line = Func.curry (line,chunk) -> 
+	chunk
+		|> Str.split \\n
+		|> findTypes line
+		|> -> 
+				| typeof! it is \Array => it |> IO.line
+				| _ 				   => it |> IO.puts
+
 watch-diff = Func.curry (x,y="",v=0,line) -> 
 		| v is 0 =>
 			x
@@ -142,16 +150,21 @@ watch-diff = Func.curry (x,y="",v=0,line) ->
 					watch-diff x, "", 0,line	
 				
 main = do
-
+	
 	ts 		= Date.now();
 	ob 		= new Date(ts);	
 	date 	= ob.getDate();
 	month 	= ob.getMonth() + 1;
 	year 	= ob.getFullYear();
-
-	unless process.argv[3] is \--help
-		IO.puts "Using file: #{process.argv[4]} at [ #{month}|#{date}|#{year} ]"
-		IO.puts "Starting analysis".green
+	
+	switch 
+		|  process.argv[3] isnt \--help and process.argv[3] isnt \--run-l => 
+			IO.puts "Using file: #{process.argv[4]} at [ #{month}|#{date}|#{year} ]"
+			IO.puts "Starting analysis".green
+		| process.argv[3] is "--run-l" =>
+			process.argv[4]
+				|> -> it.yellow
+				|> -> IO.puts "Analysing line :: #{it}"
 		
 	process.argv
 		|> filter (-> (check.p0 and check.p1) it)
@@ -165,6 +178,7 @@ main = do
 lsc putnam.ls [-option] [file] expression 
 
 --run     [single file] :: Check the current file  
+--run-l   [code chunk ] :: Check the current line of code 
 --run-m   [single file] :: Check the expression inside the file  
 --folder  [folder path] :: Will search for errors in all folder's files
 --watch   [single file] :: Watches a single file and searching for errors
@@ -175,6 +189,9 @@ lsc putnam.ls [-option] [file] expression
 			| _.0 is \--run    => 
 				_.1
 					|> run_single_file _.2
+			| _.0 is \--run-l  =>
+				_.1
+					|> run_line _.2
 			| _.0 is \--folder =>
 				_.1
 					|> IO.folder
