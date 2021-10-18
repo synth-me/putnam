@@ -8,8 +8,9 @@
 ###### It is very simple if you're already used to ruby language elixir or crystal or co-related languages
 ##### To start, in the source folder you just need to 
 ```console
-hpp script.rb 
+Happer script.rb 
 ```
+( if you have executable version )
 ###### inside this script you can have the following structures 
 ```ruby 
 defc 
